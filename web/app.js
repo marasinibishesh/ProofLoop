@@ -24,18 +24,26 @@ async function init() {
     chip.onclick = () => { $("question").value = q.question; submit(); };
     $("examples").append(chip);
   }
+  if (info.voice) {
+    status.append(el("span", "pill", "Voice: ElevenLabs"));
+    $("micBtn").hidden = false;
+  }
   $("docs").textContent = info.docs.length ? `Searching ${info.docs.length} documents: ${info.docs.join(", ")}` : "";
 }
 
+// Set when the current question came from the mic, so the trace can show the transcription step.
+let voiceMs;
+
 async function submit(event) {
   event?.preventDefault();
+  if (event) voiceMs = undefined; // typed and sent by hand
   const question = $("question").value.trim();
   if (!question) return;
   $("askBtn").disabled = true;
   $("working").hidden = false;
   $("result").hidden = true;
   try {
-    const res = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }) });
+    const res = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question, voiceMs }) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || res.statusText);
     render(data);
@@ -45,8 +53,54 @@ async function submit(event) {
   } finally {
     $("askBtn").disabled = false;
     $("working").hidden = true;
+    voiceMs = undefined;
   }
 }
+
+// Optional voice input: click the mic, speak, click again. ElevenLabs only turns the audio into text;
+// the question then goes through the same agents as a typed one.
+let recorder;
+
+function voiceSay(text) {
+  $("voiceStatus").hidden = !text;
+  $("voiceStatus").textContent = text || "";
+}
+
+async function toggleMic() {
+  if (recorder?.state === "recording") return recorder.stop();
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch {
+    return voiceSay("Microphone blocked. Allow it in the browser and try again.");
+  }
+  const type = ["audio/webm", "audio/mp4", "audio/ogg"].find((t) => MediaRecorder.isTypeSupported(t)) || "";
+  recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
+  const chunks = [];
+  recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+  recorder.onstop = async () => {
+    stream.getTracks().forEach((t) => t.stop());
+    $("micBtn").classList.remove("live");
+    voiceSay("Transcribing…");
+    try {
+      const res = await fetch("/api/voice", { method: "POST", headers: { "Content-Type": recorder.mimeType || "audio/webm" }, body: new Blob(chunks) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || res.statusText);
+      if (!data.text) return voiceSay("Didn't catch that. Try again.");
+      voiceSay(`Heard: “${data.text}”`);
+      $("question").value = data.text.slice(0, 500);
+      voiceMs = data.ms;
+      submit();
+    } catch (e) {
+      voiceSay(`Voice failed: ${e.message}`);
+    }
+  };
+  recorder.start();
+  $("micBtn").classList.add("live");
+  voiceSay("Listening… click the mic again when you're done.");
+}
+
+$("micBtn").addEventListener("click", toggleMic);
 
 function citeBlock(c) {
   const box = el("div", "cite" + (c.kept === false ? " superseded" : ""));

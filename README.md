@@ -50,6 +50,10 @@ npm run sample       # sample mode: bundled fictional documents, no credentials
 
 Then open the URL it prints. Sample questions are in `samples/conference/questions.json`.
 
+**Optional voice:** with `ELEVENLABS_API_KEY` set, click 🎙, ask your question out loud, click again.
+ElevenLabs only turns speech into text (shown in the trace as a `voice` step); every answer is still
+planned, checked and proven by the same agents on Nemotron via Nightshift. Audio is not saved.
+
 ## Environment variables
 
 | Variable | Purpose |
@@ -61,9 +65,11 @@ Then open the URL it prints. Sample questions are in `samples/conference/questio
 | `ZETARIS_REST_URL` | Zetaris REST base, e.g. `http://localhost:8888/api/v1.0` |
 | `ZETARIS_ORG_ID`, `ZETARIS_API_KEY` | From the Zetaris Console |
 | `ZETARIS_SHARED_PATH` | Folder Zetaris reads files from; Proofloop writes its evidence CSVs there |
+| `ELEVENLABS_API_KEY` | Optional. Turns on the 🎙 button: ask by voice (ElevenLabs Speech-to-Text). Leave empty to hide it |
 
 ## Dependencies
 
+- Optional service: ElevenLabs Speech-to-Text (not a hackathon sponsor; input only, off by default)
 - Runtime: [`openai`](https://www.npmjs.com/package/openai) (Nightshift client), [`dotenv`](https://www.npmjs.com/package/dotenv)
 - Dev: `tsx`, `typescript`, `vitest`, `@types/node`
 - Engines (downloaded by `npm run setup`): Meterless H-MEM and World Model reference implementations (Apache-2.0)

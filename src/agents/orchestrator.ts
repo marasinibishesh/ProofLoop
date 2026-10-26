@@ -20,7 +20,8 @@ import { plan } from "./planner.ts";
 
 export const MAX_RETRIES = 2;
 
-export type Deps = { brain?: Brain; store?: EvidenceStore; memory?: HMEMInstance };
+/** voice: set when the question was spoken and transcribed by ElevenLabs (input only, no reasoning). */
+export type Deps = { brain?: Brain; store?: EvidenceStore; memory?: HMEMInstance; voice?: { model: string; ms: number } };
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9#]+/g, "-").replace(/^-|-$/g, "");
 const sameClaim = (a: Claim, b: Claim) => a.statement.trim().toLowerCase() === b.statement.trim().toLowerCase();
@@ -31,6 +32,7 @@ export async function ask(question: string, deps: Deps = {}): Promise<Answer> {
   const brain = deps.brain ?? (live.model ? new NemotronBrain(trace) : new SampleBrain());
   const store = deps.store ?? (live.data ? new ZetarisEvidenceStore(config.zetaris!.evidenceTable, trace) : new LocalEvidenceStore(loadEvidence(config.docsDir)));
   const memory = deps.memory ?? (await openMemory());
+  if (deps.voice) trace.add("voice", "transcribe", `spoken question transcribed by ElevenLabs ${deps.voice.model} in ${deps.voice.ms} ms (input only; reasoning below runs on ${brain.label})`);
   trace.add("planner", "start", `question: ${question} | model: ${brain.label} | data: ${store.name}`);
 
   // 1. What do we already know? (H-MEM)

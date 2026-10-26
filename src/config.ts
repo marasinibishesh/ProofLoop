@@ -12,6 +12,7 @@ const env = (name: string) => {
 };
 
 const nightshiftToken = env("METERLESS_RUNTIME_TOKEN");
+const elevenlabsKey = env("ELEVENLABS_API_KEY");
 const zetarisKey = env("ZETARIS_API_KEY");
 const zetarisOrg = env("ZETARIS_ORG_ID");
 
@@ -30,6 +31,8 @@ export const config = {
         app: env("METERLESS_APP") ?? "proofloop",
       }
     : undefined,
+  /** Optional voice input (speech-to-text only). */
+  elevenlabs: elevenlabsKey ? { apiKey: elevenlabsKey } : undefined,
   zetaris:
     zetarisKey && zetarisOrg
       ? {

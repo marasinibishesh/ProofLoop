@@ -23,8 +23,10 @@
       <form id="askForm">
         <label for="question" class="sr-only">Your question</label>
         <input id="question" autocomplete="off" placeholder="Ask about your documents… e.g. When exactly is my talk?" maxlength="500">
+        <button type="button" id="micBtn" class="mic" hidden aria-label="Ask by voice" title="Ask by voice (ElevenLabs speech-to-text)">🎙</button>
         <button type="submit" id="askBtn">Ask</button>
       </form>
+      <p class="voice-status" id="voiceStatus" aria-live="polite" hidden></p>
       <div class="chips" id="examples"></div>
       <p class="docs" id="docs"></p>
     </section>

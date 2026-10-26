@@ -36,7 +36,7 @@ export type Verdict = {
 /** One line of the trace: what an agent did, and which model answered. */
 export type TraceEvent = {
   at: string;
-  agent: "planner" | "investigator" | "evaluator" | "world-model" | "memory" | "zetaris" | "answer";
+  agent: "planner" | "investigator" | "evaluator" | "world-model" | "memory" | "zetaris" | "answer" | "voice";
   action: string;
   detail?: string;
   model?: { requested: string; served: string; routed?: string; receiptId?: string; ms: number };
