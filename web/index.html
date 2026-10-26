@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proofloop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">◎</span>
+      <div>
+        <h1>Proofloop</h1>
+        <p class="tagline">Doesn't answer until it can prove it.</p>
+      </div>
+    </div>
+    <div class="status" id="status" aria-live="polite"></div>
+  </header>
+
+  <main>
+    <section class="ask">
+      <form id="askForm">
+        <label for="question" class="sr-only">Your question</label>
+        <input id="question" autocomplete="off" placeholder="Ask about your documents… e.g. When exactly is my talk?" maxlength="500">
+        <button type="submit" id="askBtn">Ask</button>
+      </form>
+      <div class="chips" id="examples"></div>
+      <p class="docs" id="docs"></p>
+    </section>
+
+    <section id="working" class="working" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <span>Agents at work: planning, searching, checking every quote…</span>
+    </section>
+
+    <section id="result" hidden>
+      <div class="cols">
+        <div class="main-col">
+          <h2>Answer</h2>
+          <div id="points"></div>
+          <div id="unproven"></div>
+        </div>
+        <aside class="side-col">
+          <div class="card">
+            <h3>Plan</h3>
+            <ol id="plan"></ol>
+          </div>
+          <div class="card" id="memoryCard">
+            <h3>Already known <small>(H-MEM)</small></h3>
+            <ul id="memory"></ul>
+          </div>
+        </aside>
+      </div>
+
+      <details class="trace" open>
+        <summary>How the agents got here <span id="traceCount"></span></summary>
+        <ol id="trace"></ol>
+      </details>
+    </section>
+  </main>
+
+  <dialog id="docDialog">
+    <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+    <h3 id="docTitle"></h3>
+    <pre id="docText"></pre>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+[
+  { "id": "todo",    "question": "What do I need to do before the conference, and by when?" },
+  { "id": "when",    "question": "When exactly is my talk?" },
+  { "id": "length",  "question": "How long is my talk, and who said so?" },
+  { "id": "dinner",  "question": "When is the conference dinner?" }
+]

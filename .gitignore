@@ -1,0 +1,21 @@
+# Secrets: never commit real keys
+.env
+.env.local
+
+# Dependencies and vendored engines (recreated by `npm install` and `npm run setup`)
+node_modules/
+vendor/
+
+# Runtime state
+.proofloop/
+traces/
+*.log
+
+# Data written for Zetaris at run time
+data-out/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

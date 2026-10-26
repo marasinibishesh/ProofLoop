@@ -1,0 +1,6 @@
+Speaker notes for my ICAAD-Demo talk (draft)
+
+- My talk is on 3 December, right after the opening keynote. (Need to double-check.)
+- Keep it short: about 15 minutes.
+- Slide 4: show the offline accuracy numbers.
+- Remember to thank the co-authors on the last slide.

@@ -1,0 +1,30 @@
+{
+  "name": "proofloop",
+  "version": "0.1.0",
+  "description": "Agents that investigate your scattered information and prove every answer. Open Agent Hackathon 2026, Track 2.",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "setup": "node scripts/setup-engines.mjs",
+    "check": "tsx scripts/check-sponsors.ts",
+    "ingest": "tsx scripts/ingest.ts",
+    "start": "tsx src/server.ts",
+    "sample": "tsx src/server.ts --sample",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "openai": "^7.43.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}
