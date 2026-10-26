@@ -1,0 +1,19 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Proofloop sample//EN
+BEGIN:VEVENT
+UID:visa-1@proofloop.sample
+SUMMARY:Visa appointment
+DTSTART:20261110T093000
+DTEND:20261110T103000
+LOCATION:Embassy visa centre
+END:VEVENT
+BEGIN:VEVENT
+UID:talk-508@proofloop.sample
+SUMMARY:ICAAD talk - Paper #508
+DTSTART:20261203T110000
+DTEND:20261203T112000
+LOCATION:Kathmandu Convention Centre\, Hall A
+DESCRIPTION:Copied from the programme I saved earlier.
+END:VEVENT
+END:VCALENDAR

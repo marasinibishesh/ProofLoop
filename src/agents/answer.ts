@@ -7,6 +7,7 @@ import type { Review } from "./evaluator.ts";
 type Accepted = Extract<Review, { ok: true }>;
 export type FactOutcome = { claimId: string; kept: boolean };
 
+const pct = (n: number) => `${Math.round(n * 100)}%`;
 const key = (a: Accepted) => `${(a.claim.subject ?? "").toLowerCase().trim()}|${(a.claim.predicate ?? "").toLowerCase().trim()}`;
 const cite = (a: Accepted, kept?: boolean): Cite => ({ source: a.evidence.source, quote: a.claim.quote, confidence: a.confidence, reason: a.reason, kept });
 
@@ -29,8 +30,9 @@ export function buildPoints(accepted: Accepted[], outcomes: FactOutcome[]): Answ
         statement: winner.claim.statement,
         label: "conflict" as Label,
         sources: [cite(winner, true), ...losers.map((l) => cite(l, false))],
-        note: `Sources disagree. Kept ${winner.evidence.source} (confidence ${winner.confidence.toFixed(2)}) over ` +
-          losers.map((l) => `${l.evidence.source} (${l.confidence.toFixed(2)}: ${l.reason})`).join("; "),
+        // Each source's reason is shown under its quote, so the note only names the decision.
+        note: `${group.length} sources disagree. Kept ${winner.evidence.source} (${pct(winner.confidence)}) over ` +
+          losers.map((l) => `${l.evidence.source} (${pct(l.confidence)})`).join(", ") + ".",
       });
     } else {
       // Same value from one or more sources: confirmed, citing every source.

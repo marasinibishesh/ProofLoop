@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "dotenv": "^18.0.9",
-    "openai": "^7.43.0"
+    "openai": "^7.43.0",
+    "unpdf": "1.8.1"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

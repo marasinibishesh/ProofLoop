@@ -1,11 +1,137 @@
 [
   {
+    "id": "trip",
+    "question": "When do I travel, where do I stay, and when is my talk?",
+    "plan": [
+      {
+        "id": "s1",
+        "text": "When do I travel to Kathmandu and back?"
+      },
+      {
+        "id": "s2",
+        "text": "Where do I stay, and from when to when?"
+      },
+      {
+        "id": "s3",
+        "text": "On which date and at what time is paper #508 presented?"
+      }
+    ],
+    "claims": {
+      "s1": [
+        {
+          "statement": "Bus from Pokhara to Kathmandu on 2 December 2026 at 07:00.",
+          "quote": "item: Bus Pokhara to Kathmandu; provider: Sample Travels; date: 2 December 2026; time: 07:00",
+          "source": "travel_bookings.csv",
+          "subject": "bus to Kathmandu",
+          "predicate": "date",
+          "value": "2 December 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.9,
+            "reason": "A booking record with a reference number."
+          }
+        },
+        {
+          "statement": "Bus back from Kathmandu to Pokhara on 5 December 2026 at 13:00.",
+          "quote": "item: Bus Kathmandu to Pokhara; provider: Sample Travels; date: 5 December 2026; time: 13:00",
+          "source": "travel_bookings.csv",
+          "subject": "bus to Pokhara",
+          "predicate": "date",
+          "value": "5 December 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.9,
+            "reason": "A booking record with a reference number."
+          }
+        }
+      ],
+      "s2": [
+        {
+          "statement": "Hotel: Sample Guest House, Thamel, check-in 2 December 2026 at 14:00, 3 nights until 5 December.",
+          "quote": "item: Hotel check-in; provider: Sample Guest House, Thamel; date: 2 December 2026; time: 14:00; details: 3 nights, check-out 5 December 2026",
+          "source": "travel_bookings.csv",
+          "subject": "hotel",
+          "predicate": "stay",
+          "value": "2 to 5 December 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.9,
+            "reason": "A booking record with a reference number."
+          }
+        }
+      ],
+      "s3": [
+        {
+          "statement": "The talk (paper #508) is on 4 December 2026 at 10:30, in Session B.",
+          "quote": "Day 2 - 4 December 2026 10:30 Session B: AI in Agriculture Paper #508",
+          "source": "programme.txt",
+          "subject": "talk #508",
+          "predicate": "date",
+          "value": "4 December 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.9,
+            "reason": "The official conference programme lists paper #508 in Session B on Day 2, 4 December."
+          }
+        },
+        {
+          "statement": "The talk is on 3 December, right after the opening keynote.",
+          "quote": "My talk is on 3 December, right after the opening keynote. (Need to double-check.)",
+          "source": "slides_notes.txt",
+          "subject": "talk #508",
+          "predicate": "date",
+          "value": "3 December 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.35,
+            "reason": "Only in personal draft notes, and the note itself says it needs double-checking."
+          }
+        },
+        {
+          "statement": "The talk is on 3 December 2026 at 11:00 (calendar entry).",
+          "quote": "ICAAD talk - Paper #508. Starts: 3 December 2026 11:00",
+          "source": "calendar.ics",
+          "subject": "talk #508",
+          "predicate": "date",
+          "value": "3 December 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.5,
+            "reason": "Your own calendar entry; it says it was copied from a programme, not which one."
+          }
+        },
+        {
+          "statement": "The talk is on Day 1, 3 December 2026, at 11:00 in Session B.",
+          "quote": "Day 1 - 3 December 2026 09:00 Opening keynote 11:00 Session B: AI in Agriculture Paper #508",
+          "source": "programme_draft.txt",
+          "subject": "talk #508",
+          "predicate": "date",
+          "value": "3 December 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.9,
+            "reason": "A conference programme lists paper #508 on Day 1."
+          }
+        }
+      ]
+    }
+  },
+  {
     "id": "todo",
     "question": "What do I need to do before the conference, and by when?",
     "plan": [
-      { "id": "s1", "text": "Which tasks and deadlines does the acceptance letter set?" },
-      { "id": "s2", "text": "What must speakers do on the day of their session?" },
-      { "id": "s3", "text": "What personal preparation (visa, travel) is planned?" }
+      {
+        "id": "s1",
+        "text": "Which tasks and deadlines does the acceptance letter set?"
+      },
+      {
+        "id": "s2",
+        "text": "What must speakers do on the day of their session?"
+      },
+      {
+        "id": "s3",
+        "text": "What personal preparation (visa, travel) is planned?"
+      }
     ],
     "claims": {
       "s1": [
@@ -13,22 +139,40 @@
           "statement": "Submit the camera-ready paper by 20 November 2026.",
           "quote": "Submit the camera-ready version of your paper by 20 November 2026 through the submission portal.",
           "source": "acceptance_letter.txt",
-          "subject": "camera-ready paper", "predicate": "deadline", "value": "20 November 2026",
-          "judge": { "supported": true, "confidence": 0.95, "reason": "Stated directly in the official acceptance letter." }
+          "subject": "camera-ready paper",
+          "predicate": "deadline",
+          "value": "20 November 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.95,
+            "reason": "Stated directly in the official acceptance letter."
+          }
         },
         {
           "statement": "At least one author must register by 15 November 2026.",
           "quote": "At least one author must register for the conference by 15 November 2026.",
           "source": "acceptance_letter.txt",
-          "subject": "registration", "predicate": "deadline", "value": "15 November 2026",
-          "judge": { "supported": true, "confidence": 0.95, "reason": "Stated directly in the official acceptance letter." }
+          "subject": "registration",
+          "predicate": "deadline",
+          "value": "15 November 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.95,
+            "reason": "Stated directly in the official acceptance letter."
+          }
         },
         {
           "statement": "Upload the presentation slides one week before the conference.",
           "quote": "Upload your presentation slides one week before the conference.",
           "source": "acceptance_letter.txt",
-          "subject": "slides upload", "predicate": "deadline", "value": "one week before the conference",
-          "judge": { "supported": true, "confidence": 0.9, "reason": "Listed as a next step in the acceptance letter." }
+          "subject": "slides upload",
+          "predicate": "deadline",
+          "value": "one week before the conference",
+          "judge": {
+            "supported": true,
+            "confidence": 0.9,
+            "reason": "Listed as a next step in the acceptance letter."
+          }
         }
       ],
       "s2": [
@@ -36,8 +180,14 @@
           "statement": "Check in at the registration desk at least 30 minutes before the session.",
           "quote": "Speakers must check in at the registration desk at least 30 minutes before their session.",
           "source": "programme.txt",
-          "subject": "speaker check-in", "predicate": "deadline", "value": "30 minutes before the session",
-          "judge": { "supported": true, "confidence": 0.9, "reason": "Rule printed in the official programme." }
+          "subject": "speaker check-in",
+          "predicate": "deadline",
+          "value": "30 minutes before the session",
+          "judge": {
+            "supported": true,
+            "confidence": 0.9,
+            "reason": "Rule printed in the official programme."
+          }
         }
       ],
       "s3": [
@@ -45,8 +195,14 @@
           "statement": "The visa appointment is on 10 November.",
           "quote": "Visa appointment booked for 10 November.",
           "source": "notes.md",
-          "subject": "visa appointment", "predicate": "date", "value": "10 November",
-          "judge": { "supported": true, "confidence": 0.7, "reason": "From your own notes; clear, but not an official document." }
+          "subject": "visa appointment",
+          "predicate": "date",
+          "value": "10 November",
+          "judge": {
+            "supported": true,
+            "confidence": 0.7,
+            "reason": "From your own notes; clear, but not an official document."
+          }
         }
       ]
     }
@@ -55,7 +211,10 @@
     "id": "when",
     "question": "When exactly is my talk?",
     "plan": [
-      { "id": "s1", "text": "On which date and at what time is paper #508 presented?" }
+      {
+        "id": "s1",
+        "text": "On which date and at what time is paper #508 presented?"
+      }
     ],
     "claims": {
       "s1": [
@@ -63,15 +222,53 @@
           "statement": "The talk (paper #508) is on 4 December 2026 at 10:30, in Session B.",
           "quote": "Day 2 - 4 December 2026 10:30 Session B: AI in Agriculture Paper #508",
           "source": "programme.txt",
-          "subject": "talk #508", "predicate": "date", "value": "4 December 2026",
-          "judge": { "supported": true, "confidence": 0.9, "reason": "The official conference programme lists paper #508 in Session B on Day 2, 4 December." }
+          "subject": "talk #508",
+          "predicate": "date",
+          "value": "4 December 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.9,
+            "reason": "The official conference programme lists paper #508 in Session B on Day 2, 4 December."
+          }
         },
         {
           "statement": "The talk is on 3 December, right after the opening keynote.",
           "quote": "My talk is on 3 December, right after the opening keynote. (Need to double-check.)",
           "source": "slides_notes.txt",
-          "subject": "talk #508", "predicate": "date", "value": "3 December 2026",
-          "judge": { "supported": true, "confidence": 0.35, "reason": "Only in personal draft notes, and the note itself says it needs double-checking." }
+          "subject": "talk #508",
+          "predicate": "date",
+          "value": "3 December 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.35,
+            "reason": "Only in personal draft notes, and the note itself says it needs double-checking."
+          }
+        },
+        {
+          "statement": "The talk is on 3 December 2026 at 11:00 (calendar entry).",
+          "quote": "ICAAD talk - Paper #508. Starts: 3 December 2026 11:00",
+          "source": "calendar.ics",
+          "subject": "talk #508",
+          "predicate": "date",
+          "value": "3 December 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.5,
+            "reason": "Your own calendar entry; it says it was copied from a programme, not which one."
+          }
+        },
+        {
+          "statement": "The talk is on Day 1, 3 December 2026, at 11:00 in Session B.",
+          "quote": "Day 1 - 3 December 2026 09:00 Opening keynote 11:00 Session B: AI in Agriculture Paper #508",
+          "source": "programme_draft.txt",
+          "subject": "talk #508",
+          "predicate": "date",
+          "value": "3 December 2026",
+          "judge": {
+            "supported": true,
+            "confidence": 0.9,
+            "reason": "A conference programme lists paper #508 on Day 1."
+          }
         }
       ]
     }
@@ -80,7 +277,10 @@
     "id": "length",
     "question": "How long is my talk, and who said so?",
     "plan": [
-      { "id": "s1", "text": "How long is the presentation slot for paper #508?" }
+      {
+        "id": "s1",
+        "text": "How long is the presentation slot for paper #508?"
+      }
     ],
     "claims": {
       "s1": [
@@ -88,8 +288,14 @@
           "statement": "The talk is 15 minutes, plus 5 minutes for questions.",
           "quote": "Paper #508 \"Offline Assistants for Rural Farmers\" - 15 minutes + 5 minutes questions",
           "source": "programme.txt",
-          "subject": "talk #508", "predicate": "length", "value": "15 minutes + 5 minutes questions",
-          "judge": { "supported": true, "confidence": 0.9, "reason": "The official programme gives the slot length." }
+          "subject": "talk #508",
+          "predicate": "length",
+          "value": "15 minutes + 5 minutes questions",
+          "judge": {
+            "supported": true,
+            "confidence": 0.9,
+            "reason": "The official programme gives the slot length."
+          }
         }
       ]
     }
@@ -98,7 +304,10 @@
     "id": "dinner",
     "question": "When is the conference dinner?",
     "plan": [
-      { "id": "s1", "text": "On which date is the conference dinner?" }
+      {
+        "id": "s1",
+        "text": "On which date is the conference dinner?"
+      }
     ],
     "claims": {
       "s1": [
@@ -106,11 +315,19 @@
           "statement": "The conference dinner is on the evening of 4 December.",
           "quote": "Someone said the conference dinner is on 4 December evening (not confirmed anywhere).",
           "source": "notes.md",
-          "subject": "conference dinner", "predicate": "date", "value": "4 December evening",
-          "judge": { "supported": false, "confidence": 0.2, "reason": "Only hearsay in personal notes, which say it is not confirmed; no official document mentions a dinner." }
+          "subject": "conference dinner",
+          "predicate": "date",
+          "value": "4 December evening",
+          "judge": {
+            "supported": false,
+            "confidence": 0.2,
+            "reason": "Only hearsay in personal notes, which say it is not confirmed; no official document mentions a dinner."
+          }
         }
       ]
     },
-    "retryClaims": { "s1": [] }
+    "retryClaims": {
+      "s1": []
+    }
   }
 ]

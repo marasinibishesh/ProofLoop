@@ -4,10 +4,12 @@
 to verify it. Items marked TODO are filled in as they are built.*
 
 ## Zetaris: the data layer
-- **How it's integrated:** documents and notes are split into chunks and written as CSV tables
-  (`evidence`: id, source, kind, chunk_no, text) into the folder Zetaris reads; they are registered with
-  `CREATE LIGHTNING FILESTORE TABLE`. The investigator agent searches evidence only through Lightning SQL
-  over the Zetaris REST API (`src/sponsors/zetaris.ts`).
+- **How it's integrated:** every source in the user's folder (PDFs, text and notes, spreadsheet rows,
+  calendar events) becomes rows of one evidence table (`evidence`: id, source, kind, chunk_no, newer_version,
+  text) in the folder Zetaris reads, registered with `CREATE LIGHTNING FILESTORE TABLE`. Zetaris is the single
+  layer that fragmented data flows through: the investigator agent searches evidence only through Lightning
+  SQL over the Zetaris REST API (`src/sponsors/zetaris.ts`), and `kind` / `newer_version` travel with every
+  row, so the agents know a calendar entry from a final programme and an old draft from the newest version.
 - **Verify:** `npm run check` runs `SELECT 1`; the trace shows every SQL query an agent ran. TODO: demo query.
 
 ## Meterless Nightshift: the primary AI provider

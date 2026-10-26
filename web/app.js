@@ -28,7 +28,27 @@ async function init() {
     status.append(el("span", "pill", "Voice: ElevenLabs"));
     $("micBtn").hidden = false;
   }
-  $("docs").textContent = info.docs.length ? `Searching ${info.docs.length} documents: ${info.docs.join(", ")}` : "";
+  showFiles(info.files);
+}
+
+const KINDS = { file: "text", note: "note", pdf: "PDF", table: "spreadsheet", calendar: "calendar" };
+
+// What Proofloop found in the folder: how many files of each type, and which are old versions or copies.
+function showFiles(files) {
+  const docs = $("docs");
+  docs.replaceChildren();
+  if (!files.length) return docs.append("No supported files found (txt, md, pdf, csv, ics).");
+  const read = files.filter((f) => !f.duplicateOf && !f.error);
+  const counts = {};
+  for (const f of read) counts[KINDS[f.kind] || f.kind] = (counts[KINDS[f.kind] || f.kind] || 0) + 1;
+  docs.append(`Reading ${read.length} files: ${Object.entries(counts).map(([k, n]) => `${n} ${k}`).join(", ")}.`);
+  const notes = [
+    ...files.filter((f) => f.newerVersion).map((f) => `${f.source} is an older version of ${f.newerVersion}, so it counts less.`),
+    ...files.filter((f) => f.duplicateOf).map((f) => `${f.source} is an identical copy of ${f.duplicateOf}, read once.`),
+    ...files.filter((f) => f.error && !f.duplicateOf).map((f) => `${f.source}: ${f.error}.`),
+  ];
+  if (notes.length) docs.append(el("ul", "found"));
+  for (const n of notes) docs.lastChild.append(el("li", "", n));
 }
 
 // Set when the current question came from the mic, so the trace can show the transcription step.

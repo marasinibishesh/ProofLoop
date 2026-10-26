@@ -1,6 +1,7 @@
 # Proofloop: build plan
 
-**Open Agent Hackathon 2026 · Track 2: The Agent That Can Explain Why**
+**Open Agent Hackathon 2026 · Track 1: Fragmented Intelligence** (moved from Track 2 on 26 Oct; also
+competing for the NVIDIA Nemotron award)
 **Team:** Rajesh Khadka, Bishesh Marasini
 **Deadline:** 27 October 2026, 23:45 UTC (28 October, 05:30 Nepal time). Aim to submit by the evening before.
 
@@ -8,14 +9,22 @@
 
 ## 1. What we are building (one paragraph)
 
-**Proofloop answers questions about your own scattered information and proves every answer.** You ask
-something like *"What do I need to do before the conference?"*. A team of agents digs through your
-documents, notes and the web, connects what they find, checks every claim against its source, and returns
-one clear answer where each point shows the exact quote it came from. When two sources disagree (the slides
-say 3 December, the programme says 4 December), Proofloop shows both, says which one it trusts and why. If
-something can't be proven, it says so instead of guessing.
+**Point Proofloop at your messy files and get one answer you can prove.** It reads a whole folder (PDFs,
+text and notes, spreadsheets, calendar exports, subfolders too), skips identical copies, and knows which
+file is an older version of another. You ask something like *"When do I travel, where do I stay, and when is
+my talk?"*. A team of agents searches all of it through Zetaris, connects what they find, checks every claim
+against its source, and returns one answer where each point shows the exact quote it came from. When sources
+disagree (your notes and calendar say 3 December because they were copied from an old draft; the final
+programme says 4 December), Proofloop shows every side, says which it trusts and why. If something can't be
+proven, it says so instead of guessing.
 
-Tagline: **"Proofloop doesn't answer until it can prove it."**
+Tagline: **"Point it at your messy files, get one answer you can prove."**
+
+Why Track 1: the problem is information scattered across file types, folders, copies and versions. Zetaris
+is the one data layer that all of it flows through, and the agents turn it into one trusted answer.
+
+Built on lessons from our earlier projects (ideas rebuilt from scratch, no code copied): folder scanning
+from LazyFold, and PDF reading plus "which copy is the newest version" from SlothBoss.
 
 ## 2. Who it is for and why it matters
 
@@ -24,26 +33,30 @@ Tagline: **"Proofloop doesn't answer until it can prove it."**
 - **Problem:** the answer to "what do I need to do?" or "is this true?" is spread across many places. People
   either dig through everything by hand or ask a chatbot that answers confidently and sometimes invents things.
 - **Value:** one answer you can actually check. Every claim links to its evidence, conflicts are surfaced,
-  and unproven claims are labelled. That is exactly what Track 2 asks for: *investigate across multiple data
-  sources, connect findings, produce evidence-backed answers.*
+  older versions count less, and unproven claims are labelled.
 
 ## 3. Demo scenario (what judges will see)
 
-Sample data: a fictional student preparing for a conference.
+Sample data (in the repo, fictional): a student preparing for a conference. The recorded demo uses the
+same kind of real files from a real event, kept private and blurred where personal.
 
 | File | What's inside |
 |---|---|
 | `acceptance_letter.txt` | "Camera-ready paper due 20 November. Register by 15 November." |
-| `programme.txt` | "Session B, 4 December, 10:30. Talk length: 15 minutes." |
-| `slides_notes.txt` | "My talk is on 3 December." (conflicts with the programme) |
-| `notes.md` | Personal notes: visa appointment, travel budget |
-| web | the conference website (via search, optional) |
+| `Downloads/acceptance_letter (1).txt` | Identical copy: read once |
+| `programme.txt` | Final programme: "Day 2 - 4 December, 10:30, Session B, paper #508" |
+| `programme_draft.txt` | Older draft: paper #508 on Day 1, 3 December (older version: counts half) |
+| `slides_notes.txt` | "My talk is on 3 December." (copied from the draft) |
+| `calendar.ics` | Calendar export: talk on 3 December 11:00 (also from the draft) |
+| `travel_bookings.csv` | Spreadsheet: bus 2 Dec, hotel 2–5 Dec, bus back 5 Dec |
+| `notes.md` | Personal notes: visa appointment, dinner hearsay |
 
 Questions that must always work:
-1. *"What do I need to do before the conference, and by when?"*
-2. *"When exactly is my talk?"* (conflict: 3 Dec vs 4 Dec, resolved with reasons)
-3. *"How long is my talk and who said so?"*
-4. One follow-up that uses memory: *"What did we already confirm?"*
+1. *"When do I travel, where do I stay, and when is my talk?"* (spreadsheet + calendar + documents in one
+   answer; 4-way date conflict resolved, older draft counts half)
+2. *"What do I need to do before the conference, and by when?"*
+3. *"When exactly is my talk?"*
+4. *"When is the conference dinner?"* (not proven: hearsay, sent back, still not proven)
 
 ## 4. How it works: the agent loop
 
@@ -129,8 +142,9 @@ Proofloop/
 │  │  ├─ worldModel.ts       loads the vendored World Model; evidence graph + conflicts
 │  │  └─ hmem.ts             loads the vendored H-MEM; memory + audit
 │  ├─ data/
-│  │  ├─ ingest.ts           documents → chunks → CSV tables Zetaris can read
-│  │  └─ readers/            text / markdown / PDF readers
+│  │  ├─ ingest.ts           folder scan → chunks → CSV table Zetaris reads
+│  │  ├─ versions.ts         older versions and identical copies
+│  │  └─ readers/            text + markdown, PDF, CSV spreadsheet, .ics calendar
 │  └─ trace/
 │     └─ trace.ts            JSONL trace: agent, step, model, receipt, timing
 ├─ web/                      index.html, app.js, style.css (question box, answer, evidence, trace)
@@ -174,8 +188,11 @@ credentials:
 Zetaris as the evidence source; Nightshift + Nemotron for all model calls with receipts in the trace;
 World Model conflicts; H-MEM memory; sample mode; tests; README; demo; slides.
 
-**Nice to have (only if time):** web search as an extra evidence source; PDF reading; image reading with
-`nvidia/nemotron-3.5-super-vl-120b-a12b`; "create tasks" action with approval.
+**Done beyond must-have:** PDF, spreadsheet and calendar reading; folder scan; version and copy detection;
+optional voice questions (ElevenLabs speech-to-text, input only).
+
+**Nice to have (only if time):** "prove it" follow-up challenge; web search as an extra evidence source;
+image reading with `nvidia/nemotron-3.5-super-vl-120b-a12b`.
 
 **Future work slide:** Word/PowerPoint/Excel, photos, file actions (from SlothBoss and LazyFold), Scout Intent.
 

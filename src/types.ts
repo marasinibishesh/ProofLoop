@@ -3,9 +3,10 @@
 /** A piece of evidence found in a source (a document chunk, a note, a web page). */
 export type Evidence = {
   id: string;            // e.g. "programme.txt#3"
-  source: string;        // file name or URL
-  kind: "file" | "note" | "web";
+  source: string;        // path inside the documents folder, e.g. "conference/programme.pdf"
+  kind: "file" | "note" | "pdf" | "table" | "calendar" | "web";
   text: string;          // the chunk text
+  newerVersion?: string; // set when this file is an older version of another file
 };
 
 /** A sub-question the planner wants answered. */

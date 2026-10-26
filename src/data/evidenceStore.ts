@@ -46,18 +46,24 @@ export class ZetarisEvidenceStore implements EvidenceStore {
     const r = await sql(statement, limit);
     this.trace?.add("zetaris", "query", `${statement} -> ${r.rows.length} rows in ${r.ms} ms`);
     const col = (name: string) => r.columns.findIndex((c) => c.toLowerCase() === name);
-    const [id, source, kind, text] = ["id", "source", "kind", "text"].map(col);
-    return r.rows.map((row) => ({ id: String(row[id]), source: String(row[source]), kind: String(row[kind]) as Evidence["kind"], text: String(row[text]) }));
+    const [id, source, kind, text, newer] = ["id", "source", "kind", "text", "newer_version"].map(col);
+    return r.rows.map((row) => ({
+      id: String(row[id]),
+      source: String(row[source]),
+      kind: String(row[kind]) as Evidence["kind"],
+      text: String(row[text]),
+      ...(newer >= 0 && row[newer] ? { newerVersion: String(row[newer]) } : {}),
+    }));
   }
 
   async search(terms: string[], limit = 5): Promise<Evidence[]> {
     if (terms.length === 0) return [];
     const where = terms.map((t) => `lower(text) LIKE ${quote(`%${t}%`)}`).join(" OR ");
     const score = terms.map((t) => `CASE WHEN lower(text) LIKE ${quote(`%${t}%`)} THEN 1 ELSE 0 END`).join(" + ");
-    return this.run(`SELECT id, source, kind, text, (${score}) AS score FROM ${this.table} WHERE ${where} ORDER BY score DESC LIMIT ${limit}`, limit);
+    return this.run(`SELECT id, source, kind, newer_version, text, (${score}) AS score FROM ${this.table} WHERE ${where} ORDER BY score DESC LIMIT ${limit}`, limit);
   }
 
   async bySource(source: string): Promise<Evidence[]> {
-    return this.run(`SELECT id, source, kind, text FROM ${this.table} WHERE source = ${quote(source)}`, 200);
+    return this.run(`SELECT id, source, kind, newer_version, text FROM ${this.table} WHERE source = ${quote(source)}`, 200);
   }
 }

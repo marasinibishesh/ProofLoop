@@ -32,12 +32,28 @@ describe("sample questions", () => {
     expect(a.points.flatMap((p) => p.sources).every((s) => s.quote.length > 0)).toBe(true);
   });
 
-  it("resolves the talk-date conflict with the World Model and keeps the programme", async () => {
+  it("resolves the talk-date conflict with the World Model and keeps the final programme", async () => {
     const a = await ask("When exactly is my talk?", { memory: await freshMemory() });
     const p = a.points.find((x) => x.label === "conflict");
     expect(p?.statement).toContain("4 December");
-    expect(p?.sources.find((s) => s.kept === false)?.source).toBe("slides_notes.txt");
-    expect(a.trace.some((t) => t.agent === "world-model" && t.detail?.includes("1 superseded"))).toBe(true);
+    expect(p?.sources.find((s) => s.kept)?.source).toBe("programme.txt");
+    expect(p?.sources.filter((s) => s.kept === false).map((s) => s.source).sort()).toEqual(["calendar.ics", "programme_draft.txt", "slides_notes.txt"]);
+    expect(a.trace.some((t) => t.agent === "world-model" && t.detail?.includes("3 superseded"))).toBe(true);
+  });
+
+  it("trusts the newest version: the draft programme counts half", async () => {
+    const a = await ask("When exactly is my talk?", { memory: await freshMemory() });
+    const draft = a.points.flatMap((p) => p.sources).find((s) => s.source === "programme_draft.txt");
+    expect(draft?.confidence).toBe(0.45); // judged 0.9, halved because programme.txt is newer
+    expect(draft?.reason).toContain("Older version of the file: programme.txt is newer");
+  });
+
+  it("combines a spreadsheet, a calendar and documents in one answer", async () => {
+    const a = await ask("When do I travel, where do I stay, and when is my talk?", { memory: await freshMemory() });
+    const sources = new Set(a.points.flatMap((p) => p.sources.map((s) => s.source)));
+    expect(sources).toEqual(new Set(["travel_bookings.csv", "programme.txt", "calendar.ics", "programme_draft.txt", "slides_notes.txt"]));
+    expect(a.points.filter((p) => p.label === "confirmed").map((p) => p.statement).join(" ")).toContain("Sample Guest House");
+    expect(a.points.some((p) => p.label === "conflict" && p.statement.includes("4 December"))).toBe(true);
   });
 
   it("refuses to confirm hearsay: the dinner date is not proven after a retry", async () => {
@@ -68,7 +84,7 @@ describe("the evaluator sends bad claims back", () => {
       },
       judge: async (_c: Claim): Promise<Judgement> => ({ supported: true, confidence: 0.9, reason: "In the programme." }),
     };
-    const a = await ask("How long is my talk?", { brain, store: new LocalEvidenceStore(loadEvidence(SAMPLES)), memory: await freshMemory() });
+    const a = await ask("How long is my talk?", { brain, store: new LocalEvidenceStore(await loadEvidence(SAMPLES)), memory: await freshMemory() });
     expect(calls).toHaveLength(2);
     expect(calls[1]).toContain("was not found word for word");
     expect(a.points[0]?.label).toBe("confirmed");

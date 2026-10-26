@@ -2,6 +2,7 @@
 // so judges can run Proofloop without any credentials.
 
 import "dotenv/config";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -21,7 +22,8 @@ export const config = {
   stateDir: path.join(root, ".proofloop"),
   sampleFlag: process.argv.includes("--sample"),
   /** Folder with the user's documents and notes (defaults to the bundled sample). */
-  docsDir: path.resolve(root, env("PROOFLOOP_DOCS") ?? path.join("samples", "conference")),
+  /** "~" means the home folder, so PROOFLOOP_DOCS=~/Documents/ICAAD works on macOS and Windows. */
+  docsDir: path.resolve(root, (env("PROOFLOOP_DOCS") ?? path.join("samples", "conference")).replace(/^~(?=$|[\\/])/, os.homedir())),
   port: Number(env("PROOFLOOP_PORT") ?? 4317),
   nightshift: nightshiftToken
     ? {

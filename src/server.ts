@@ -8,6 +8,8 @@ import http from "node:http";
 import path from "node:path";
 import { config, live } from "./config.ts";
 import { ask } from "./agents/orchestrator.ts";
+import { loadLibrary } from "./data/ingest.ts";
+import { readText } from "./data/readers/text.ts";
 import { openMemory } from "./sponsors/hmem.ts";
 import { STT_MODEL, transcribe } from "./voice/elevenlabs.ts";
 
@@ -50,16 +52,21 @@ const server = http.createServer(async (req, res) => {
         live,
         voice: !!config.elevenlabs,
         questions: fs.existsSync(questionsFile) ? JSON.parse(fs.readFileSync(questionsFile, "utf8")) : [],
-        docs: fs.readdirSync(config.docsDir).filter((f) => /\.(txt|md)$/i.test(f)),
+        files: (await loadLibrary(config.docsDir)).files,
       });
     }
 
     if (url.pathname === "/api/doc") {
-      // Only plain file names inside the documents folder: no paths, no "..".
-      const name = path.basename(url.searchParams.get("name") ?? "");
-      const file = path.join(config.docsDir, name);
-      if (!/\.(txt|md)$/i.test(name) || !fs.existsSync(file)) return send(res, 404, { error: "not found" });
-      return send(res, 200, { name, text: fs.readFileSync(file, "utf8") });
+      // Only files Proofloop found in the documents folder; the name is looked up, never used as a path.
+      const name = url.searchParams.get("name") ?? "";
+      const library = await loadLibrary(config.docsDir);
+      const found = library.files.find((f) => f.source === name);
+      if (!found) return send(res, 404, { error: "not found" });
+      // Text and Markdown are shown as written; PDFs, spreadsheets and calendars as Proofloop read them.
+      const text = found.kind === "file" || found.kind === "note"
+        ? readText(path.join(config.docsDir, ...name.split("/")))
+        : library.evidence.filter((e) => e.source === name).map((e) => e.text).join("\n\n");
+      return send(res, 200, { name, kind: found.kind, newerVersion: found.newerVersion, text });
     }
 
     if (url.pathname === "/api/voice" && req.method === "POST") {

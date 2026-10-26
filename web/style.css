@@ -52,6 +52,7 @@ main { max-width: 1120px; margin: 0 auto; padding: 28px 24px 64px; }
 .chip { font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
 .chip:hover { border-color: var(--brand); }
 .docs { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+.docs .found { margin: 4px 0 0; padding-left: 18px; color: var(--warn); }
 
 .working { display: flex; align-items: center; gap: 12px; margin-top: 28px; color: var(--muted); }
 .spinner { width: 18px; height: 18px; border: 3px solid var(--line); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.8s linear infinite; }
