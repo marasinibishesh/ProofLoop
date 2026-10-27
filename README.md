@@ -1,106 +1,132 @@
 # Proofloop
 
-**Point it at your messy files, get one answer you can prove.**
-Open Agent Hackathon 2026 · Track 1: *Fragmented Intelligence* · Team: Rajesh Khadka, Bishesh Marasini
+> A team of AI agents that answers questions from your own files, and proves every answer.
 
-Point Proofloop at a folder (PDFs, notes, spreadsheets, calendar exports, subfolders, duplicate downloads,
-old drafts) and ask *"When do I travel, where do I stay, and when is my talk?"*. A team of agents (planner,
-investigator, evaluator) searches all of it through **Zetaris**, reasons with **NVIDIA Nemotron via Meterless
-Nightshift**, checks every claim against its source, resolves conflicting sources with the **Meterless World
-Model**, and remembers what it verified with **Meterless H-MEM**. Every point in the answer shows its quote,
-its source and a label: *confirmed*, *conflict*, or *not proven*.
+Open Agent Hackathon 2026 · Track 1: Solving Fragmented Intelligence
 
-**What it reads:** `.txt`, `.md`, `.pdf` (text layer), `.csv` spreadsheets (one row per piece of evidence)
-and `.ics` calendar exports, in the folder and its subfolders. Identical copies are read once; when a file is
-an older version of another (`programme_draft.txt` vs `programme.txt`, `report_v1.pdf` vs `report_v2.pdf`),
-its evidence counts half, so the newest version wins a conflict. Word and PowerPoint files: export them as PDF.
+## About the Project
 
-> **Status:** the full agent loop runs in sample mode (`npm run sample`); live Nightshift + Zetaris
-> integration is being connected. See [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md).
+Proofloop reads a folder you choose (PDFs, notes, spreadsheets, calendar exports, chat exports) and answers your questions only with evidence. Every answer shows the exact line it came from. When files disagree, Proofloop says which file it trusts and why; when nothing proves an answer, it says **Not proven** instead of guessing.
 
-## Requirements
+We built it for anyone whose important details are scattered across many files: students, job seekers, travellers, small teams.
 
-- Windows 10/11 or macOS 12+ (Apple Silicon or Intel)
-- [Node.js](https://nodejs.org) 20 or newer, and Git
-- For live mode: Meterless Nightshift running locally with NVIDIA added as a provider, and a Zetaris instance.
-  Without them, Proofloop runs in **sample mode** (no credentials needed).
+## The Problem
 
-## Setup (same commands on Windows and macOS)
+Information is fragmented across files, formats and versions. Documents are revised, copied and summarised, and the copies often contradict one another: a final notice and an old draft, a calendar entry copied from the wrong version, a rumour in a group chat. Checking which source is right takes time, and a typical AI assistant returns one confident answer without evidence, even when the sources disagree.
 
-```bash
-git clone <this-repo-url> proofloop
-cd proofloop
-npm install
-npm run setup        # downloads the Meterless H-MEM and World Model reference engines into vendor/
-npm test             # engine tests (no credentials needed)
-```
+## The Solution
 
-Live mode only: copy `.env.example` to `.env` and fill in your own values. Never commit `.env`.
-The NVIDIA API key does **not** go in `.env`; add it in Nightshift → Setup → Providers → NVIDIA.
+Proofloop treats every question as a small investigation. Its agents search your files, attach an exact quote to every claim, check each quote against the source, and settle disagreements by how trustworthy each source is (an official document outweighs a personal note, and an older version counts less). The result has three possible outcomes:
 
-```bash
-npm run check        # one real call to Nightshift, Zetaris, H-MEM and World Model: PASS / FAIL / SKIP
-npm run ingest       # splits your documents into evidence chunks and registers them in Zetaris
-```
+- **Confirmed:** the answer, with the line that proves it.
+- **Files disagree:** the answer from the most trusted file, with the sources that were set aside.
+- **Not proven:** no reliable evidence, so no guess.
 
-`npm run ingest` writes `data-out/evidence.csv`. Zetaris must be able to read it at `ZETARIS_SHARED_PATH`;
-set `ZETARIS_IMPORT_DIR` to the same folder as seen from your computer (for example the Docker volume) and
-the script copies it there for you.
+## Demo
 
-## Usage
+- **Live Demo:** runs locally (see [Getting Started](#getting-started)); sample mode needs no accounts or keys.
+- **Demo Video:** https://youtu.be/iDL9hR9CAC8
 
-```bash
-npm start            # live mode (uses your .env)
-npm run sample       # sample mode: bundled fictional documents, no credentials
-```
+![Proofloop answering "When is my DBMS exam?": files disagree, the official routine is trusted over the calendar, with live agent steps on the right](docs/screenshot.png)
 
-Then open the URL it prints. Sample questions are in `samples/conference/questions.json`.
+The demo folder is in [`samples/student-desktop/`](samples/student-desktop/) (fictional college, company and people). Three example questions and outputs:
 
-**Use your own files:** set `PROOFLOOP_DOCS` in `.env` to a folder, e.g. `PROOFLOOP_DOCS=~/Documents/ICAAD`
-(macOS) or `PROOFLOOP_DOCS=C:\Users\you\Documents\ICAAD` (Windows), then run `npm run ingest` and `npm start`.
-Your files stay on your computer; only the evidence chunks go to your own Zetaris instance and the model.
-
-**Optional voice:** with `ELEVENLABS_API_KEY` set, click 🎙, ask your question out loud, click again.
-ElevenLabs only turns speech into text (shown in the trace as a `voice` step); every answer is still
-planned, checked and proven by the same agents on Nemotron via Nightshift. Audio is not saved.
-
-## Environment variables
-
-| Variable | Purpose |
+| Question | Answer |
 |---|---|
-| `METERLESS_BASE_URL` | Nightshift OpenAI-compatible endpoint, e.g. `http://127.0.0.1:8088/v1` |
-| `METERLESS_RUNTIME_TOKEN` | Runtime token from Nightshift → Console |
-| `METERLESS_MODEL` | Pinned model, default `nvidia/nemotron-3.5-lightning-30b-a3b` |
-| `METERLESS_APP` | App name sent in the `meterless-app` header |
-| `ZETARIS_REST_URL` | Zetaris REST base, e.g. `http://localhost:8888/api/v1.0` |
-| `ZETARIS_ORG_ID`, `ZETARIS_API_KEY` | From the Zetaris Console |
-| `ZETARIS_SHARED_PATH` | Folder Zetaris reads files from, as Zetaris sees it |
-| `ZETARIS_IMPORT_DIR` | The same folder as seen from your computer; `npm run ingest` copies `evidence.csv` there |
-| `PROOFLOOP_DOCS` | The folder of files to read (default: the bundled sample). `~` means your home folder |
-| `ELEVENLABS_API_KEY` | Optional. Turns on the 🎙 button: ask by voice (ElevenLabs Speech-to-Text). Leave empty to hide it |
+| When is my DBMS exam? | Files disagree → **18 Nov 2026**, from the final exam routine, over the calendar and to-do list (16 Nov) |
+| When does my internship start? | Files disagree → **5 Jan 2027**, from offer letter v2, over v1 (15 Dec 2026) |
+| Was the mini project deadline extended? | **Not proven**: only a class-group rumour; the brief says 12 Nov 2026, 5:00 PM |
 
-## Dependencies
+## Key Features
 
-- Optional service: ElevenLabs Speech-to-Text (not a hackathon sponsor; input only, off by default)
-- Runtime: [`openai`](https://www.npmjs.com/package/openai) (Nightshift client), [`dotenv`](https://www.npmjs.com/package/dotenv),
-  [`unpdf`](https://www.npmjs.com/package/unpdf) (PDF text)
-- Dev: `tsx`, `typescript`, `vitest`, `@types/node`
-- Engines (downloaded by `npm run setup`): Meterless H-MEM and World Model reference implementations (Apache-2.0)
+- **Choose any folder:** reads PDF, text, Markdown, CSV and calendar (.ics) files, including subfolders.
+- **Understands messy folders:** reads identical copies once and trusts the newest version of a file.
+- **Exact proof:** every point cites the exact line; click a file to open it with the line highlighted.
+- **Conflicts explained:** shows which file was trusted, which were set aside, and why.
+- **Refuses to guess:** rumours and unsupported claims are marked **Not proven**.
+- **Live agent steps and activity log:** every search, model call and decision appears as it happens, with the database query and model receipt behind it.
+- **Across your folder:** a table of every file and what the agents did with it.
 
-## Sponsor technology
+## How It Works
 
-See [docs/SPONSORS.md](docs/SPONSORS.md) for how Zetaris, Meterless Nightshift, the Meterless Engines and
-NVIDIA Nemotron are used, and the tests proving they work.
+1. You choose a folder and ask a question in plain words.
+2. The folder is loaded into **Zetaris** as a searchable table (duplicates skipped, older versions marked).
+3. The **Planner** splits the question; the **Investigator** searches Zetaris and drafts claims, each with an exact quote.
+4. The **Evaluator** checks each quote word for word in code, checks its meaning with the model, rejects hearsay and sends weak claims back for another try.
+5. The **World Model** settles conflicts by source trust, and **Memory** stores what was proven.
+6. You get the conclusion, the proof for each point, and the full log of how it was reached.
 
-## Pre-existing components (declared)
+## Built With
 
-- **Meterless H-MEM and World Model reference implementations** (Apache-2.0), vendored unmodified into
-  `vendor/` by `npm run setup`. Proofloop calls them; it does not change them.
-- **Sample documents** in `samples/conference/` are fictional (people, bookings and reference numbers are made up).
-- **Loader pattern** for the engines follows the official Meterless `agentathon-starter` template (Apache-2.0).
-- Everything else in this repository was written during the build window (22–27 October 2026).
-  Some ideas come from the team's earlier projects and were rebuilt from scratch here (no code copied): folder
-  scanning from LazyFold, and PDF reading plus "which copy is the newest version" from SlothBoss.
+- **Language:** TypeScript (Node.js 20+), plain HTML/CSS/JavaScript for the interface
+- **Framework:** none; Node's built-in HTTP server, Vitest for tests
+- **Tools / Models:**
+  - **NVIDIA Nemotron 3.5 Lightning** (`nvidia/nemotron-3.5-lightning-30b-a3b`): the model behind every agent
+  - **Meterless Nightshift:** the AI runtime; every model call returns a receipt
+  - **Zetaris:** the data layer; documents become a Lightning SQL table and every search is a Zetaris query
+  - **Meterless World Model:** facts with provenance and the conflict policy
+  - **Meterless H-MEM:** per-folder memory with an audit ledger
+
+More detail: [docs/SPONSORS.md](docs/SPONSORS.md).
+
+## Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org) 20 or newer, and Git
+- For the live version (not needed for sample mode):
+  - Meterless Nightshift running, with NVIDIA set up as a provider (Setup → Providers → NVIDIA)
+  - [Docker Desktop](https://www.docker.com/products/docker-desktop/) running the Zetaris local platform
+
+### Installation
+
+1. Clone the repository.
+   ```bash
+   git clone https://github.com/marasinibishesh/ProofLoop.git
+   ```
+2. Open the project directory.
+   ```bash
+   cd ProofLoop
+   ```
+3. Install the dependencies and the Meterless engines.
+   ```bash
+   npm install
+   npm run setup
+   ```
+4. Configure the environment variables (live version only).
+   ```bash
+   cp .env.example .env      # Windows: copy .env.example .env
+   ```
+   Fill in `METERLESS_RUNTIME_TOKEN` (from Nightshift), `ZETARIS_ORG_ID` and `ZETARIS_API_KEY` (from the Zetaris web app), then check every connection:
+   ```bash
+   npm run check
+   ```
+5. Start the application.
+   ```bash
+   npm start          # live version: Nemotron via Nightshift, data in Zetaris
+   npm run sample     # sample mode: no accounts or keys, pre-written agent replies
+   ```
+   Open http://localhost:4317, click **Choose folder**, pick a folder (for example `samples/student-desktop`) and ask a question.
+
+Run the tests with `npm test`.
+
+## Challenges and Learnings
+
+- **The model copied answers between sources.** When several files mentioned the same exam, Nemotron sometimes wrote the calendar's date into the claim for the official notice, and an identical sentence from a second file was skipped as a duplicate. We now ask for the quote first and the claim second, check every quote in code, and treat the same sentence from a different file as new evidence. We learned to verify the model's output in code instead of trusting it.
+- **Fitting Zetaris to a local folder.** Lightning SQL has no `IF NOT EXISTS`, a filestore table behaves as a view, and quotation marks inside CSV text need an explicit escape option. We now rebuild the evidence table on every load and verify that every passage in Zetaris matches its source.
+- **Showing real work, not animation.** The live timeline streams real trace events from the server, so every row on screen is something the agents actually did.
+
+## Contributors
+
+- [Rajesh Khadka](https://github.com/rajeshkhadka200)
+- [Bishesh Marasini](https://github.com/marasinibishesh)
+
+## Acknowledgements
+
+- **Open Agent Hackathon 2026** and its sponsors: NVIDIA, Zetaris and Meterless.
+- **Pre-existing components (declared):** the Meterless H-MEM and World Model reference engines (Apache-2.0), downloaded unmodified into `vendor/` by `npm run setup`; the engine loader pattern from the Meterless `agentathon-starter` template; the Zetaris local platform image; and the [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) font (SIL Open Font License, licence in `web/fonts/OFL.txt`). Everything else was written during the build window (22–27 October 2026).
+- **Libraries:** [openai](https://www.npmjs.com/package/openai) (client for Nightshift's OpenAI-compatible API), [dotenv](https://www.npmjs.com/package/dotenv), [unpdf](https://www.npmjs.com/package/unpdf) (PDF text).
+- Cursor was not used in this project.
 
 ## License
 
