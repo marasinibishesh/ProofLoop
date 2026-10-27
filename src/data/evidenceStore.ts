@@ -12,7 +12,9 @@ export interface EvidenceStore {
   bySource(source: string): Promise<Evidence[]>;
 }
 
-const STOP = new Set("a an and are at be by did do does for from how i in is it its me my of on or the this to was what when where which who why will with you your before after need exactly".split(" "));
+// Includes generic words (date, time, schedule...) that appear in nearly every document and would crowd out the answer.
+const STOP = new Set(("a an and are at be by did do does for from how i in is it its me my of on or the this to was what when where which who why will with you your before after need exactly " +
+  "date dates time times schedule scheduled day").split(" "));
 
 /** Lower-case content words of a question, for searching. */
 export function keywords(text: string): string[] {
@@ -43,6 +45,7 @@ export class ZetarisEvidenceStore implements EvidenceStore {
   constructor(private readonly table: string, private readonly trace?: Trace) {}
 
   private async run(statement: string, limit: number): Promise<Evidence[]> {
+    this.trace?.pending("zetaris", "query");
     const r = await sql(statement, limit);
     this.trace?.add("zetaris", "query", `${statement} -> ${r.rows.length} rows in ${r.ms} ms`);
     const col = (name: string) => r.columns.findIndex((c) => c.toLowerCase() === name);

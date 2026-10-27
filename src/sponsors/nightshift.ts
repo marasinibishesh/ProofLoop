@@ -37,14 +37,18 @@ export async function listModels(): Promise<string[]> {
 }
 
 /** One chat call through Nightshift. Returns the text and the routing receipt for the trace. */
-export async function chat(messages: ChatMessage[], opts: { model?: string; json?: boolean } = {}): Promise<{ text: string; receipt: ModelReceipt }> {
+export async function chat(messages: ChatMessage[], opts: { model?: string; json?: boolean; thinking?: boolean } = {}): Promise<{ text: string; receipt: ModelReceipt }> {
   const requestedModel = opts.model ?? config.nightshift!.model;
   const started = Date.now();
   const resp = await getClient().chat.completions.create({
     model: requestedModel,
     messages,
     ...(opts.json ? { response_format: { type: "json_object" as const } } : {}),
-  });
+    // Same input, same answer: Proofloop proves things, so it should not vary from run to run.
+    temperature: 0,
+    // Nemotron reasons before answering unless told not to; Nightshift passes this through to the model.
+    ...((opts.thinking ?? true) ? {} : { chat_template_kwargs: { enable_thinking: false } }),
+  } as OpenAI.ChatCompletionCreateParamsNonStreaming);
   const meterless = ((resp as unknown as Record<string, unknown>).meterless ?? {}) as Record<string, any>;
   return {
     text: resp.choices[0]?.message?.content ?? "",

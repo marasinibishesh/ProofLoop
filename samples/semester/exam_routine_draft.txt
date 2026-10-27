@@ -1,0 +1,7 @@
+Sample Institute of Technology - Examination Section
+Internal Examination Routine, 5th Semester, BE IT (DRAFT - subject to change)
+Published: 10 November 2026.
+
+16 December 2026, 10:00  Database Management Systems - DBMS (IT 312)  Room 302
+18 December 2026, 10:00  Computer Networks (IT 311)  Room 301
+21 December 2026, 10:00  Software Engineering (IT 313)  Room 301

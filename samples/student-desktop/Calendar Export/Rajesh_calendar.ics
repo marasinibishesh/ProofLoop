@@ -1,0 +1,33 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Calendar export//EN
+BEGIN:VEVENT
+UID:dbms-exam@calendar.local
+SUMMARY:DBMS internal exam
+DTSTART:20261116T100000
+DTEND:20261116T130000
+LOCATION:Room 302
+DESCRIPTION:Copied from the routine I saved earlier.
+END:VEVENT
+BEGIN:VEVENT
+UID:project-submission@calendar.local
+SUMMARY:Mini project submission
+DTSTART:20261112T170000
+DTEND:20261112T173000
+LOCATION:College portal
+END:VEVENT
+BEGIN:VEVENT
+UID:internship-start@calendar.local
+SUMMARY:Internship starts - Kestrel Software
+DTSTART:20261215T090000
+DTEND:20261215T170000
+LOCATION:Kathmandu
+DESCRIPTION:From the offer letter.
+END:VEVENT
+BEGIN:VEVENT
+UID:ict-club@calendar.local
+SUMMARY:ICT Club executive meeting
+DTSTART:20261030T160000
+DTEND:20261030T170000
+END:VEVENT
+END:VCALENDAR

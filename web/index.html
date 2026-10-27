@@ -3,68 +3,123 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Proofloop</title>
+  <title>Proofloop · Answers from your files, with proof</title>
+  <meta name="description" content="Ask a question about the files in your folder. Proofloop's agents answer with the exact line it came from, show when your files disagree, and say when something is not proven.">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Crect width='8' height='8' fill='%23111'/%3E%3Cpath d='M1 4h1v1h1v1h1V5h1V4h1V3h1V2H6v1H5v1H4v1H3V4H2V3H1z' fill='%232ea44f'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="top">
-    <div class="brand">
-      <span class="logo" aria-hidden="true">◎</span>
-      <div>
-        <h1>Proofloop</h1>
-        <p class="tagline">Doesn't answer until it can prove it.</p>
+    <div class="top-inner">
+      <div class="brand">
+        <span class="wordmark">PROOFLOOP</span>
+        <span class="tagline">Answers from your files, with proof</span>
       </div>
+      <div class="status" id="status" aria-live="polite"></div>
     </div>
-    <div class="status" id="status" aria-live="polite"></div>
   </header>
 
   <main>
-    <section class="ask">
+    <section class="ask" aria-labelledby="askTitle">
+      <h1 id="askTitle">Ask a question about your files</h1>
+      <p class="lede">The agents search your files, check every quote, and show you which file to trust when files disagree.</p>
+
       <form id="askForm">
-        <label for="question" class="sr-only">Your question</label>
-        <input id="question" autocomplete="off" placeholder="Ask about your documents… e.g. When exactly is my talk?" maxlength="500">
-        <button type="button" id="micBtn" class="mic" hidden aria-label="Ask by voice" title="Ask by voice (ElevenLabs speech-to-text)">🎙</button>
-        <button type="submit" id="askBtn">Ask</button>
+        <label for="question" class="field-label">Your question</label>
+        <div class="ask-form">
+          <input id="question" autocomplete="off" placeholder="Type a question about the files in your folder" maxlength="500">
+          <button type="button" id="micBtn" class="btn btn-secondary btn-icon" hidden aria-label="Ask by voice" title="Ask by voice">
+            <svg viewBox="0 0 8 8" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M3 0h2v1h1v3H5v1H3V4H2V1h1zM1 3h1v1h1v1h2V4h1V3h1v2H6v1H5v1H3V6H2V5H1z"/></svg>
+          </button>
+          <button type="submit" id="askBtn" class="btn btn-primary">Ask</button>
+        </div>
       </form>
       <p class="voice-status" id="voiceStatus" aria-live="polite" hidden></p>
-      <div class="chips" id="examples"></div>
-      <div class="docs" id="docs"></div>
+
+      <div class="folder-bar">
+        <span class="folder-label">FOLDER</span>
+        <span class="folder-name" id="folderName"></span>
+        <span class="folder-meta" id="folderMeta"></span>
+        <button type="button" class="btn btn-secondary btn-small" id="folderBtn">Choose folder</button>
+        <input type="file" id="folderInput" webkitdirectory multiple hidden>
+      </div>
+      <p class="folder-status" id="folderStatus" aria-live="polite" hidden></p>
+
     </section>
 
-    <section id="working" class="working" hidden>
-      <div class="spinner" aria-hidden="true"></div>
-      <span>Agents at work: planning, searching, checking every quote…</span>
-    </section>
+    <section id="run" class="run" hidden>
+      <div class="run-grid">
+        <section class="answer-col" aria-labelledby="answerTitle">
+          <div class="section-head">
+            <h2 id="answerTitle">Answer</h2>
+            <p class="summary" id="summary"></p>
+          </div>
 
-    <section id="result" hidden>
-      <div class="cols">
-        <div class="main-col">
-          <h2>Answer</h2>
+          <div class="working-box" id="waiting">
+            <p class="working-title"><span class="spin" aria-hidden="true"></span><span id="workingText">The agents are working on your question.</span></p>
+            <ol class="working-plan" id="workingPlan"></ol>
+          </div>
+
+          <section class="conclusion" id="conclusion" hidden aria-labelledby="conclusionTitle">
+            <h3 id="conclusionTitle">CONCLUSION</h3>
+            <ul id="conclusionList"></ul>
+          </section>
+
           <div id="points"></div>
           <div id="unproven"></div>
-        </div>
-        <aside class="side-col">
-          <div class="card">
-            <h3>Plan</h3>
-            <ol id="plan"></ol>
+
+          <section class="across" id="across" hidden aria-labelledby="acrossTitle">
+            <h3 id="acrossTitle">ACROSS YOUR FOLDER</h3>
+            <p class="across-lede" id="acrossLede"></p>
+            <table class="files across-table">
+              <thead><tr><th>File</th><th>Type</th><th>What the agents did with it</th></tr></thead>
+              <tbody id="acrossRows"></tbody>
+            </table>
+          </section>
+
+          <div class="extras" id="extras" hidden>
+            <section class="side">
+              <h3>How the question was split</h3>
+              <ol id="plan"></ol>
+            </section>
+            <section class="side" id="memoryCard">
+              <h3>Checked in earlier questions</h3>
+              <ul id="memory"></ul>
+            </section>
           </div>
-          <div class="card" id="memoryCard">
-            <h3>Already known <small>(H-MEM)</small></h3>
-            <ul id="memory"></ul>
+        </section>
+
+        <section class="timeline-col" aria-labelledby="stepsTitle">
+          <div class="section-head">
+            <h2 id="stepsTitle">Agent steps</h2>
+            <button type="button" class="btn btn-secondary btn-small" id="skipBtn" hidden>Skip</button>
           </div>
-        </aside>
+          <p class="counts" id="counts" aria-live="polite"></p>
+          <ol class="timeline" id="timeline" aria-live="polite"></ol>
+        </section>
       </div>
 
-      <details class="trace" open>
-        <summary>How the agents got here <span id="traceCount"></span></summary>
-        <ol id="trace"></ol>
-      </details>
+      <section class="activity" id="activity" hidden aria-labelledby="activityTitle">
+        <div class="section-head">
+          <h2 id="activityTitle">Activity log</h2>
+          <p class="summary" id="activityMeta"></p>
+        </div>
+        <div class="activity-wrap">
+          <table class="activity-table">
+            <thead><tr><th class="num">Time</th><th>Agent</th><th>What happened</th><th>Details</th></tr></thead>
+            <tbody id="activityRows"></tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </main>
 
-  <dialog id="docDialog">
-    <form method="dialog"><button class="close" aria-label="Close">×</button></form>
-    <h3 id="docTitle"></h3>
+  <dialog id="docDialog" aria-labelledby="docTitle">
+    <div class="dialog-head">
+      <h3 id="docTitle"></h3>
+      <form method="dialog"><button class="btn btn-ghost btn-icon" aria-label="Close">X</button></form>
+    </div>
     <pre id="docText"></pre>
   </dialog>
 

@@ -10,9 +10,9 @@ import { loadEvidence } from "../data/ingest.ts";
 import { LocalEvidenceStore, ZetarisEvidenceStore, type EvidenceStore } from "../data/evidenceStore.ts";
 import { openMemory, type HMEMInstance } from "../sponsors/hmem.ts";
 import { openWorld } from "../sponsors/worldModel.ts";
-import { Trace } from "../trace/trace.ts";
+import { Trace, type TraceListener } from "../trace/trace.ts";
 import type { Answer, Claim } from "../types.ts";
-import { buildPoints, type FactOutcome } from "./answer.ts";
+import { buildPoints, dropDiscredited, predicateKey, sameValue, subjectKey, unifySubjects, type FactOutcome } from "./answer.ts";
 import { NemotronBrain, SampleBrain, type Brain } from "./brain.ts";
 import { review, type Review } from "./evaluator.ts";
 import { investigate } from "./investigator.ts";
@@ -21,16 +21,16 @@ import { plan } from "./planner.ts";
 export const MAX_RETRIES = 2;
 
 /** voice: set when the question was spoken and transcribed by ElevenLabs (input only, no reasoning). */
-export type Deps = { brain?: Brain; store?: EvidenceStore; memory?: HMEMInstance; voice?: { model: string; ms: number } };
+/** `onTrace`: receives every step as it happens (for streaming to the page); the answer is the same either way. */
+export type Deps = { brain?: Brain; store?: EvidenceStore; memory?: HMEMInstance; voice?: { model: string; ms: number }; onTrace?: TraceListener };
 
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9#]+/g, "-").replace(/^-|-$/g, "");
 const sameClaim = (a: Claim, b: Claim) => a.statement.trim().toLowerCase() === b.statement.trim().toLowerCase();
 
 export async function ask(question: string, deps: Deps = {}): Promise<Answer> {
   const started = Date.now();
-  const trace = new Trace();
-  const brain = deps.brain ?? (live.model ? new NemotronBrain(trace) : new SampleBrain());
+  const trace = new Trace(deps.onTrace);
   const store = deps.store ?? (live.data ? new ZetarisEvidenceStore(config.zetaris!.evidenceTable, trace) : new LocalEvidenceStore(await loadEvidence(config.docsDir)));
+  const brain = deps.brain ?? (live.model ? new NemotronBrain(trace, store) : new SampleBrain());
   const memory = deps.memory ?? (await openMemory());
   if (deps.voice) trace.add("voice", "transcribe", `spoken question transcribed by ElevenLabs ${deps.voice.model} in ${deps.voice.ms} ms (input only; reasoning below runs on ${brain.label})`);
   trace.add("planner", "start", `question: ${question} | model: ${brain.label} | data: ${store.name}`);
@@ -51,14 +51,16 @@ export async function ask(question: string, deps: Deps = {}): Promise<Answer> {
     // these are what we report as "not proven"; if a retry succeeds, they are replaced.
     let lastFailures: Extract<Review, { ok: false }>[] = [];
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      const { claims, evidence } = await investigate(brain, store, question, sub, trace, hint);
+      const subjects = [...new Set(accepted.map((a) => a.claim.subject).filter((s): s is string => !!s))];
+      const { claims, evidence } = await investigate(brain, store, question, sub, trace, hint, subjects);
       if (claims.length === 0) {
         if (attempt > 0) trace.add("investigator", "gave up", `${sub.id}: no better evidence found after the evaluator's feedback`);
         break;
       }
       const failures: Extract<Review, { ok: false }>[] = [];
       for (const claim of claims) {
-        if (accepted.some((a) => sameClaim(a.claim, claim))) continue;
+        // The same sentence from the same passage is checked once; from another file it is new evidence and is checked too.
+        if (accepted.some((a) => sameClaim(a.claim, claim) && a.claim.evidenceId === claim.evidenceId)) continue;
         const r = await review(brain, claim, evidence.get(claim.evidenceId), trace);
         if (r.ok) accepted.push(r);
         else failures.push(r);
@@ -70,17 +72,27 @@ export async function ask(question: string, deps: Deps = {}): Promise<Answer> {
     }
     rejected.push(...lastFailures);
   }
-  const unproven = rejected.filter((r) => !accepted.some((a) => sameClaim(a.claim, r.claim)));
+  const unproven = rejected.filter((r, i) => !accepted.some((a) => sameClaim(a.claim, r.claim)) && rejected.findIndex((x) => sameClaim(x.claim, r.claim)) === i);
+
+  // Sources name one thing in different ways ("DBMS internal exam", "DBMS exam"); give each thing one name so they meet.
+  const names = unifySubjects(accepted.map((a) => a.claim.subject).filter((s): s is string => !!s));
+  for (const a of accepted) if (a.claim.subject) a.claim.subject = names.get(a.claim.subject) ?? a.claim.subject;
 
   // 4. World Model: every accepted claim becomes a fact with provenance; conflicts are refereed.
   const world = await openWorld({ namespace: `run-${trace.runId}`, conflictPolicy: "highest-confidence-wins" });
   const factIds = new Map<string, string>();
+  const valuesSeen = new Map<string, string[]>();
   for (const a of accepted) {
     if (!a.claim.subject || !a.claim.predicate || !a.claim.value) continue;
+    // Values that agree ("4 December" / "4 December 2026") are asserted with the same wording, so only real disagreements conflict.
+    const key = `${subjectKey(a.claim.subject)}|${predicateKey(a.claim.predicate)}`;
+    const seen = valuesSeen.get(key) ?? [];
+    const value = seen.find((v) => sameValue(v, a.claim.value!)) ?? a.claim.value;
+    valuesSeen.set(key, [...seen, value]);
     const fact = await world.assertFact({
-      about: `topic:${slug(a.claim.subject)}`,
-      predicate: slug(a.claim.predicate),
-      value: a.claim.value,
+      about: `topic:${subjectKey(a.claim.subject)}`,
+      predicate: predicateKey(a.claim.predicate),
+      value,
       confidence: a.confidence,
       source: { kind: "file", by: "proofloop-evaluator", url: a.evidence.source, at: new Date().toISOString() },
     });
@@ -89,7 +101,7 @@ export async function ask(question: string, deps: Deps = {}): Promise<Answer> {
   const outcomes: FactOutcome[] = [];
   for (const [claimId, factId] of factIds) {
     const about = accepted.find((a) => a.claim.id === claimId)!.claim.subject!;
-    const fact = world.view("facts").about(`topic:${slug(about)}`).find((f: { id: string }) => f.id === factId);
+    const fact = world.view("facts").about(`topic:${subjectKey(about)}`).find((f: { id: string }) => f.id === factId);
     outcomes.push({ claimId, kept: !fact?.supersededBy });
   }
   const conflicts = outcomes.filter((o) => !o.kept).length;
@@ -106,14 +118,14 @@ export async function ask(question: string, deps: Deps = {}): Promise<Answer> {
   for (const r of unproven) remember(memory, `Not proven: ${r.claim.statement} (${r.reason}; ${asked})`);
   trace.add("memory", "store", `${accepted.length - lostIds.size} verified, ${lostIds.size} superseded, ${unproven.length} not proven`);
 
-  const points = buildPoints(accepted, outcomes);
-  trace.add("answer", "done", `${points.length} point(s), ${unproven.length} not proven, in ${Date.now() - started} ms`);
+  const { points, notProven } = dropDiscredited(accepted, buildPoints(accepted, outcomes));
+  trace.add("answer", "done", `${points.length} point(s), ${unproven.length + notProven.length} not proven, in ${Date.now() - started} ms`);
   trace.save();
   return {
     question,
     subQuestions: subs,
     points,
-    unproven: unproven.map((r) => ({ statement: r.claim.statement, source: r.claim.evidenceId.split("#")[0] || undefined, reason: r.reason })),
+    unproven: [...unproven.map((r) => ({ statement: r.claim.statement, source: r.claim.evidenceId.split("#")[0] || undefined, reason: r.reason })), ...notProven],
     memory: recalled,
     trace: trace.events,
     mode: { model: brain.label, data: store.name },

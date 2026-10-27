@@ -1,0 +1,4 @@
+DBMS Lab - Report 6: Transactions and Concurrency Control
+
+Submit Lab Report 6 to the lab instructor by 8 November 2026.
+Include the SQL scripts and screenshots of each transaction test.

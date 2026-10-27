@@ -5,7 +5,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { config } from "../config.ts";
+import { config, live } from "../config.ts";
 
 export type HMEMInstance = {
   add(input: { content: string; type?: string; source?: string }): { id: string; layer: string; content: string };
@@ -21,7 +21,8 @@ export type HMEMInstance = {
 
 const ENTRY = path.join(config.root, "vendor", "hmem", "src", "index.ts");
 
-export async function openMemory(persistDir = path.join(config.stateDir, "memory")): Promise<HMEMInstance> {
+// Sample runs (pre-written replies) keep their own memory, so they never show up as "Verified" in a live run.
+export async function openMemory(persistDir = path.join(config.stateDir, live.model ? "memory" : "memory-sample")): Promise<HMEMInstance> {
   if (!fs.existsSync(ENTRY)) throw new Error("H-MEM engine not found. Run: npm run setup");
   const mod = await import(pathToFileURL(ENTRY).href);
   return new mod.HMEM({ persistDir, actor: "proofloop" }) as HMEMInstance;

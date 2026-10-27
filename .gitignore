@@ -1,6 +1,7 @@
 # Secrets: never commit real keys
 .env
-.env.local
+.env.*
+!.env.example
 
 # Dependencies and vendored engines (recreated by `npm install` and `npm run setup`)
 node_modules/
@@ -19,3 +20,12 @@ data-out/
 Thumbs.db
 .vscode/
 .idea/
+
+# Demo screen recordings and video edits (large, personal)
+loop content/
+
+# Video files anywhere (recordings are large and personal)
+*.mp4
+*.mov
+*.m4a
+*.aiff

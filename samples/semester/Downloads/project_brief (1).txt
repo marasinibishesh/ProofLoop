@@ -1,0 +1,8 @@
+Sample Institute of Technology - Department of IT
+Mini Project (IT 314): Submission Guidelines
+
+Submit the final report (PDF) and the source code through the college portal by 12 December 2026, 5:00 PM.
+Late submissions lose 10% of the marks for each day.
+
+Project viva: 14 December 2026, from 10:00, in the IT Lab.
+Each group must bring a printed copy of the report to the viva.

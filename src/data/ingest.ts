@@ -27,6 +27,9 @@ export const isSupported = (file: string) => SUPPORTED.includes(path.extname(fil
 const SKIP_DIRS = new Set(["node_modules", "vendor", "data-out", "$recycle.bin", "appdata"]);
 const LIMITS = { depth: 4, files: 500, bytes: 25_000_000 };
 
+/** The same rules for the page, so "Choose folder" only copies files the reader would read. */
+export const FOLDER_RULES = { types: SUPPORTED, skipDirs: [...SKIP_DIRS], ...LIMITS };
+
 export type ScannedFile = { file: string; rel: string; size: number; modified: number };
 
 /** Supported files under a folder (hidden folders, dependencies and huge files skipped). Paths use "/". */

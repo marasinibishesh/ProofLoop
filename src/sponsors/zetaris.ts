@@ -25,8 +25,10 @@ export async function sql(statement: string, limit = 100): Promise<SqlResult> {
     signal: AbortSignal.timeout(120_000),
   });
   if (!res.ok) throw new Error(`Zetaris ${res.status}: ${(await res.text()).slice(0, 300)}`);
-  const body = (await res.json()) as { headers?: { name: string }[]; data?: unknown[][] };
-  return { columns: (body.headers ?? []).map((h) => h.name), rows: body.data ?? [], queryId, ms: Date.now() - started };
+  // The local platform returns headers as plain column names; older docs show { name } objects.
+  const body = (await res.json()) as { headers?: (string | { name: string })[]; data?: unknown[][] };
+  const columns = (body.headers ?? []).map((h) => (typeof h === "string" ? h : h.name));
+  return { columns, rows: body.data ?? [], queryId, ms: Date.now() - started };
 }
 
 /** Escapes a value for use inside a single-quoted SQL string literal. */

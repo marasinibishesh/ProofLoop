@@ -10,7 +10,8 @@ export type Evidence = {
 };
 
 /** A sub-question the planner wants answered. */
-export type SubQuestion = { id: string; text: string };
+/** `terms`: words the documents are likely to use (e.g. "hotel" for "where do I stay"), used for the search. */
+export type SubQuestion = { id: string; text: string; terms?: string[] };
 
 /** A claim drafted by the investigator, always tied to a quote from one piece of evidence. */
 export type Claim = {

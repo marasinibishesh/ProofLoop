@@ -7,12 +7,24 @@ import { config } from "../config.ts";
 import type { TraceEvent } from "../types.ts";
 import type { ModelReceipt } from "../sponsors/nightshift.ts";
 
+/**
+ * Live view of a run, for streaming to the page: "step" is a recorded event (the same object that ends up in
+ * the trace); "pending" is sent just before a model call or Zetaris query starts, so the page can show what is
+ * running now. Pending signals are not recorded.
+ */
+export type TraceMessage =
+  | { type: "step"; event: TraceEvent }
+  | { type: "pending"; agent: TraceEvent["agent"]; action: string };
+export type TraceListener = (message: TraceMessage) => void;
+
 export class Trace {
   readonly events: TraceEvent[] = [];
   readonly runId = new Date().toISOString().replace(/[:.]/g, "-");
 
+  constructor(private readonly listener?: TraceListener) {}
+
   add(agent: TraceEvent["agent"], action: string, detail?: string, receipt?: ModelReceipt): void {
-    this.events.push({
+    const event: TraceEvent = {
       at: new Date().toISOString(),
       agent,
       action,
@@ -24,7 +36,14 @@ export class Trace {
         receiptId: receipt.receiptId,
         ms: receipt.ms,
       },
-    });
+    };
+    this.events.push(event);
+    this.listener?.({ type: "step", event });
+  }
+
+  /** Announces a slow step that is starting (a model call or a Zetaris query). */
+  pending(agent: TraceEvent["agent"], action: string): void {
+    this.listener?.({ type: "pending", agent, action });
   }
 
   /** Writes the trace to .proofloop/traces/<run>.jsonl and returns the file path. */
